@@ -2,7 +2,7 @@ import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { useEffect, useRef, useState } from 'react';
 
 interface MapViewProps {
-    city: string;
+    city: string | null;
 }
 
 const containerStyle = {
@@ -10,7 +10,7 @@ const containerStyle = {
     height: '100vh',
 };
 
-const LIBRARIES: ('marker')[] = ['marker'];
+const LIBRARIES: ('places' | 'marker')[] = ['places', 'marker'];
 
 const mapOptions = {
     mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
@@ -23,8 +23,10 @@ const mapOptions = {
 };
 
 export default function MapView({ city }: MapViewProps) {
-    const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
+    const [mapReady, setMapReady] = useState(false);
+    const [initialCenter] = useState({ lat: 54.0, lng: 15.0 });
+    const [initialZoom] = useState(4);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
@@ -32,33 +34,34 @@ export default function MapView({ city }: MapViewProps) {
     });
 
     useEffect(() => {
-        if (!isLoaded || !window.google || !window.google.maps || !city) return;
+        if (!city || !mapReady || !window.google?.maps) return;
 
         const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode({ address: city }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
+            if (status === 'OK' && results?.[0]) {
                 const location = results[0].geometry.location;
-                const newCenter = { lat: location.lat(), lng: location.lng() };
-                setCenter(newCenter);
+                if (mapRef.current) {
+                    mapRef.current.setCenter(location);
+                    mapRef.current.setZoom(14);
+                }
             } else {
-                console.error(`Geocoding failed: ${status}`);
+                console.warn('Geocode failed:', status);
             }
         });
-    }, [city, isLoaded]);
+    }, [city, mapReady]);
 
-    if (!isLoaded || !center) return <div className="text-center">Loading map...</div>;
+    if (!isLoaded) return <div className="text-center">Loading map...</div>;
 
     return (
-        <div>
-            <GoogleMap
-                mapContainerStyle={containerStyle}
-                center={center}
-                zoom={14}
-                options={mapOptions}
-                onLoad={(map: google.maps.Map) => {
-                    mapRef.current = map;
-                }}
-            />
-        </div>
+        <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={initialCenter}
+            zoom={initialZoom}
+            options={mapOptions}
+            onLoad={(map: google.maps.Map) => {
+                mapRef.current = map;
+                setMapReady(true);
+            }}
+        />
     );
 }
