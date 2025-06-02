@@ -5,6 +5,11 @@ interface MapViewProps {
     city: string | null;
 }
 
+interface MapViewProps {
+    city: string | null;
+    markers?: { placeId: string }[];
+}
+
 const containerStyle = {
     width: '100%',
     height: '100vh',
@@ -25,8 +30,8 @@ const mapOptions = {
 export default function MapView({ city }: MapViewProps) {
     const mapRef = useRef<google.maps.Map | null>(null);
     const [mapReady, setMapReady] = useState(false);
-    const [initialCenter] = useState({ lat: 54.0, lng: 15.0 });
-    const [initialZoom] = useState(4);
+    const [initialCenter] = useState({ lat: 51.0, lng: 8.3 });
+    const [initialZoom] = useState(6.7);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
