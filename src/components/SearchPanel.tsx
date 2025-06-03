@@ -71,7 +71,6 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
                     name: cityName,
                     createdAt: Date.now(),
                 });
-                console.log('City saved to Firestore');
             } catch (err) {
                 console.error('Failed to save city to Firestore:', err);
             }
