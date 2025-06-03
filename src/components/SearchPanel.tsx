@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { collection, addDoc, getDocs  } from 'firebase/firestore';
+import { db } from '../FirebaseInit'; // adjust path as needed
 
 interface Suggestion {
     description: string;
@@ -23,6 +25,20 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
     }, []);
 
     useEffect(() => {
+        async function loadCities() {
+            try {
+                const snapshot = await getDocs(collection(db, 'cities'));
+                const cityNames = snapshot.docs.map(doc => doc.data().name);
+                setCities(cityNames);
+            } catch (err) {
+                console.error('Failed to load cities:', err);
+            }
+        }
+
+        loadCities();
+    }, []); // run once on mount
+
+    useEffect(() => {
         if (!input || !autocompleteService.current) {
             setSuggestions([]);
             return;
@@ -44,11 +60,23 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
         );
     }, [input]);
 
-    const handleSelect = (desc: string) => {
+    const handleSelect = async (desc: string) => {
         const cityName = desc.split(',')[0];
+
         if (!cities.includes(cityName)) {
             setCities([...cities, cityName]);
+
+            try {
+                await addDoc(collection(db, 'cities'), {
+                    name: cityName,
+                    createdAt: Date.now(),
+                });
+                console.log('City saved to Firestore');
+            } catch (err) {
+                console.error('Failed to save city to Firestore:', err);
+            }
         }
+
         onCitySelect(cityName);
         setInput('');
         setSuggestions([]);

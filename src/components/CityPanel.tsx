@@ -1,5 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PlaceAutocompleteInput from './PlaceAutocompleteInput';
+import { db } from '../FirebaseInit';
+import {
+    collection,
+    doc,
+    addDoc,
+    onSnapshot,
+    setDoc
+} from 'firebase/firestore';
 
 interface CityPanelProps {
     city: string;
@@ -15,27 +23,73 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
     const [categoryInput, setCategoryInput] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
 
-    const handleAddCategory = () => {
+    useEffect(() => {
+        const cityRef = doc(db, 'cities', city);
+        const categoriesRef = collection(cityRef, 'categories');
+
+        const unsubscribeCategories = onSnapshot(categoriesRef, (categorySnapshot) => {
+            categorySnapshot.docChanges().forEach((change) => {
+                const catId = change.doc.id;
+                const catRef = doc(categoriesRef, catId);
+                const itemsRef = collection(catRef, 'items');
+
+                if (change.type === 'added') {
+                    // Voeg realtime listener toe voor items in deze categorie
+                    const unsubscribeItems = onSnapshot(itemsRef, (itemsSnapshot) => {
+                        const items = itemsSnapshot.docs.map((doc) => doc.data().name);
+
+                        setCategories((prev) => {
+                            const exists = prev.find((c) => c.name === catId);
+                            if (exists) {
+                                // Update items van bestaande categorie
+                                return prev.map((c) =>
+                                    c.name === catId ? { ...c, items } : c
+                                );
+                            } else {
+                                // Voeg nieuwe categorie toe
+                                return [...prev, { name: catId, items }];
+                            }
+                        });
+                    });
+
+                    unsubscribers.push(unsubscribeItems);
+                }
+
+                if (change.type === 'removed') {
+                    setCategories((prev) => prev.filter((c) => c.name !== catId));
+                }
+            });
+        });
+
+        const unsubscribers: (() => void)[] = [unsubscribeCategories];
+
+        return () => {
+            unsubscribers.forEach((unsub) => unsub());
+        };
+    }, [city]);
+
+
+    const handleAddCategory = async () => {
         const name = categoryInput.trim();
         if (!name || categories.some((c) => c.name === name)) return;
 
-        setCategories([...categories, { name, items: [] }]);
+        const cityRef = doc(db, 'cities', city);
+        const categoryRef = doc(collection(cityRef, 'categories'), name);
+
+        await setDoc(categoryRef, {});
         setCategoryInput('');
     };
 
-    const handleAddPlaceToCategory = (categoryName: string, placeDescription: string) => {
-        setCategories((prev) =>
-            prev.map((cat) =>
-                cat.name === categoryName
-                    ? { ...cat, items: [...cat.items, placeDescription] }
-                    : cat
-            )
-        );
+    const handleAddPlaceToCategory = async (categoryName: string, placeDescription: string) => {
+        const cityRef = doc(db, 'cities', city);
+        const categoryRef = doc(collection(cityRef, 'categories'), categoryName);
+        const itemsCol = collection(categoryRef, 'items');
+
+        await addDoc(itemsCol, { name: placeDescription });
     };
 
     return (
         <div className="w-80 bg-white p-4 overflow-y-auto shadow-lg flex-shrink-0">
-            {/* Back button */}
             <button onClick={onBack} className="mb-4 text-blue-500 hover:text-blue-700" title="Back">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -44,7 +98,6 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
 
             <h1 className="text-xl font-bold mb-4">{city}</h1>
 
-            {/* Add new category */}
             <input
                 type="text"
                 placeholder="New category"
@@ -59,7 +112,6 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
                 Add Category
             </button>
 
-            {/* Category list */}
             {categories.map((cat) => (
                 <div key={cat.name} className="mb-6">
                     <h2 className="font-semibold mb-2">{cat.name}</h2>

@@ -40,12 +40,10 @@ export default function PlaceAutocompleteInput({ city, onSelect }: Props) {
             return;
         }
 
-        const currentInput = input;
         const delay = setTimeout(() => {
             autocompleteService.current!.getPlacePredictions(
                 {
                     input,
-                    types: ['establishment'],
                     sessionToken: sessionToken.current!,
                     locationBias: {
                         radius: 10000,
@@ -83,11 +81,15 @@ export default function PlaceAutocompleteInput({ city, onSelect }: Props) {
                     );
 
                     Promise.all(promises).then((results) => {
-                        // Only apply results if input hasn't changed in the meantime
-                        if (currentInput === input) {
-                            const filtered = results.filter(Boolean) as Suggestion[];
-                            setSuggestions(filtered.slice(0, 5));
-                        }
+                        const filtered = Array.from(
+                            new Map(
+                                results
+                                    .filter((s): s is Suggestion => s !== null)
+                                    .map((s) => [s.description.split(',')[0], s])
+                            ).values()
+                        );
+
+                        setSuggestions(filtered.slice(0, 5));
                     });
                 }
             );
