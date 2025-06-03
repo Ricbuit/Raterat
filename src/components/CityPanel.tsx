@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react';
 import PlaceAutocompleteInput from './PlaceAutocompleteInput';
 import { db } from '../FirebaseInit';
-import {
-    collection,
-    doc,
-    addDoc,
-    onSnapshot,
-    setDoc
-} from 'firebase/firestore';
+import { collection,  doc,  addDoc,  onSnapshot,  setDoc } from 'firebase/firestore';
 
 interface CityPanelProps {
     city: string;
@@ -34,25 +28,22 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
                 const itemsRef = collection(catRef, 'items');
 
                 if (change.type === 'added') {
-                    // Voeg realtime listener toe voor items in deze categorie
                     const unsubscribeItems = onSnapshot(itemsRef, (itemsSnapshot) => {
                         const items = itemsSnapshot.docs.map((doc) => doc.data().name);
 
                         setCategories((prev) => {
                             const exists = prev.find((c) => c.name === catId);
                             if (exists) {
-                                // Update items van bestaande categorie
                                 return prev.map((c) =>
                                     c.name === catId ? { ...c, items } : c
                                 );
                             } else {
-                                // Voeg nieuwe categorie toe
                                 return [...prev, { name: catId, items }];
                             }
                         });
                     });
 
-                    unsubscribers.push(unsubscribeItems);
+                    unsubscribes.push(unsubscribeItems);
                 }
 
                 if (change.type === 'removed') {
@@ -61,10 +52,10 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
             });
         });
 
-        const unsubscribers: (() => void)[] = [unsubscribeCategories];
+        const unsubscribes: (() => void)[] = [unsubscribeCategories];
 
         return () => {
-            unsubscribers.forEach((unsub) => unsub());
+            unsubscribes.forEach((unsub) => unsub());
         };
     }, [city]);
 

@@ -22,7 +22,6 @@ export default function PlaceAutocompleteInput({ city, onSelect }: Props) {
             autocompleteService.current = new window.google.maps.places.AutocompleteService();
             sessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
 
-            // Geocode the city to get its coordinates
             const geocoder = new window.google.maps.Geocoder();
             geocoder.geocode({ address: city }, (results, status) => {
                 if (status === 'OK' && results?.[0]?.geometry?.location) {
@@ -41,7 +40,7 @@ export default function PlaceAutocompleteInput({ city, onSelect }: Props) {
         }
 
         const delay = setTimeout(() => {
-            autocompleteService.current!.getPlacePredictions(
+            void autocompleteService.current!.getPlacePredictions(
                 {
                     input,
                     sessionToken: sessionToken.current!,
@@ -93,13 +92,13 @@ export default function PlaceAutocompleteInput({ city, onSelect }: Props) {
                     });
                 }
             );
-        }); // debounce
+        });
 
         return () => clearTimeout(delay);
     }, [input, cityCoords]);
 
     function haversineDistance(a: { lat: number, lng: number }, b: { lat: number, lng: number }) {
-        const R = 6371000; // meters
+        const R = 6371000;
         const toRad = (d: number) => d * (Math.PI / 180);
         const dLat = toRad(b.lat - a.lat);
         const dLng = toRad(b.lng - a.lng);

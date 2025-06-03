@@ -35,8 +35,8 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
             }
         }
 
-        loadCities();
-    }, []); // run once on mount
+        void loadCities();
+    }, [setCities]);
 
     useEffect(() => {
         if (!input || !autocompleteService.current) {

@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBOuDZDVRgcgsqk0lxYeAcYWWQC3d2MZqg",
-    authDomain: "raterat-3f487.firebaseapp.com",
-    projectId: "raterat-3f487",
-    storageBucket: "raterat-3f487.firebasestorage.app",
-    messagingSenderId: "557375630548",
-    appId: "1:557375630548:web:bef324129018ed33d55f41",
-    measurementId: "G-Q3J642EW7B"
+    apiKey: import.meta.env.FIREBASE_API_KEY,
+    authDomain: import.meta.env.FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.FIREBASE_APP_ID,
+    measurementId: import.meta.env.FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
