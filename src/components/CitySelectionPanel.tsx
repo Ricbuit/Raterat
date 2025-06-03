@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { collection, addDoc, getDocs  } from 'firebase/firestore';
-import { db } from '../FirebaseInit'; // adjust path as needed
+import type { Suggestion } from '../types';
+import { fetchCities, saveCity } from '../services/Firestore';
 
-interface Suggestion {
-    description: string;
-    place_id: string;
-}
-
-interface SearchPanelProps {
+interface CategoryPanelProps {
     onCitySelect: (city: string) => void;
     cities: string[];
     setCities: (cities: string[]) => void;
 }
 
-export default function SearchPanel({ onCitySelect, cities, setCities }: SearchPanelProps) {
+export default function CitySelectionPanel({ onCitySelect, cities, setCities }: CategoryPanelProps) {
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
@@ -25,17 +20,14 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
     }, []);
 
     useEffect(() => {
-        async function loadCities() {
+        void (async () => {
             try {
-                const snapshot = await getDocs(collection(db, 'cities'));
-                const cityNames = snapshot.docs.map(doc => doc.data().name);
+                const cityNames = await fetchCities();
                 setCities(cityNames);
             } catch (err) {
                 console.error('Failed to load cities:', err);
             }
-        }
-
-        void loadCities();
+        })();
     }, [setCities]);
 
     useEffect(() => {
@@ -44,7 +36,7 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
             return;
         }
 
-        autocompleteService.current.getPlacePredictions(
+        void autocompleteService.current.getPlacePredictions(
             {
                 input,
                 types: ['(cities)'],
@@ -67,16 +59,12 @@ export default function SearchPanel({ onCitySelect, cities, setCities }: SearchP
             setCities([...cities, cityName]);
 
             try {
-                await addDoc(collection(db, 'cities'), {
-                    name: cityName,
-                    createdAt: Date.now(),
-                });
+                await saveCity(cityName);
             } catch (err) {
                 console.error('Failed to save city to Firestore:', err);
             }
         }
 
-        onCitySelect(cityName);
         setInput('');
         setSuggestions([]);
     };

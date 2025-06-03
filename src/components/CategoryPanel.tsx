@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import PlaceAutocompleteInput from './PlaceAutocompleteInput';
-import { db } from '../FirebaseInit';
-import { collection,  doc,  addDoc,  onSnapshot,  setDoc } from 'firebase/firestore';
+import ItemAutocomplete from './ItemAutocomplete';
+import { createCategory, addItemToCategory } from '../services/Firestore';
+import { db } from '../services/Firebase';
+import { collection, doc, onSnapshot } from 'firebase/firestore';
 
 interface CityPanelProps {
     city: string;
@@ -13,7 +14,7 @@ interface Category {
     items: string[];
 }
 
-export default function CityPanel({ city, onBack }: CityPanelProps) {
+export default function CategoryPanel({ city, onBack }: CityPanelProps) {
     const [categoryInput, setCategoryInput] = useState('');
     const [categories, setCategories] = useState<Category[]>([]);
 
@@ -59,24 +60,24 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
         };
     }, [city]);
 
-
     const handleAddCategory = async () => {
         const name = categoryInput.trim();
         if (!name || categories.some((c) => c.name === name)) return;
 
-        const cityRef = doc(db, 'cities', city);
-        const categoryRef = doc(collection(cityRef, 'categories'), name);
-
-        await setDoc(categoryRef, {});
-        setCategoryInput('');
+        try {
+            await createCategory(city, name);
+            setCategoryInput('');
+        } catch (err) {
+            console.error('Failed to create category:', err);
+        }
     };
 
     const handleAddPlaceToCategory = async (categoryName: string, placeDescription: string) => {
-        const cityRef = doc(db, 'cities', city);
-        const categoryRef = doc(collection(cityRef, 'categories'), categoryName);
-        const itemsCol = collection(categoryRef, 'items');
-
-        await addDoc(itemsCol, { name: placeDescription });
+        try {
+            await addItemToCategory(city, categoryName, placeDescription);
+        } catch (err) {
+            console.error('Failed to add item to category:', err);
+        }
     };
 
     return (
@@ -107,7 +108,7 @@ export default function CityPanel({ city, onBack }: CityPanelProps) {
                 <div key={cat.name} className="mb-6">
                     <h2 className="font-semibold mb-2">{cat.name}</h2>
 
-                    <PlaceAutocompleteInput
+                    <ItemAutocomplete
                         city={city}
                         onSelect={(placeName) => handleAddPlaceToCategory(cat.name, placeName)}
                     />

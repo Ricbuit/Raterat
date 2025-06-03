@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import MapView from './MapView';
-import CityPanel from './components/CityPanel';
-import SearchPanel from './components/SearchPanel';
+import CategoryPanel from './components/CategoryPanel.tsx';
+import CitySelectionPanel from './components/CitySelectionPanel.tsx';
 import { MAP_LIBRARIES } from './MapConfig';
 
 function App() {
@@ -19,9 +19,9 @@ function App() {
     return (
         <div className="h-screen w-screen flex overflow-hidden">
             {selectedCity ? (
-                <CityPanel city={selectedCity} onBack={() => setSelectedCity(null)} />
+                <CategoryPanel city={selectedCity} onBack={() => setSelectedCity(null)} />
             ) : (
-                <SearchPanel cities={cities} setCities={setCities} onCitySelect={setSelectedCity} />
+                <CitySelectionPanel cities={cities} setCities={setCities} onCitySelect={setSelectedCity} />
             )}
 
             <div className="flex-1 h-full">
