@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import MapView from './MapView';
 import CategoryPanel from './components/CategoryPanel.tsx';
-import CitySelectionPanel from './components/CitySelectionPanel.tsx';
+import CitySelectionPanel from './components/city_selection_panel/CitySelectionPanel.tsx';
 import { MAP_LIBRARIES } from './MapConfig';
 
 function App() {
