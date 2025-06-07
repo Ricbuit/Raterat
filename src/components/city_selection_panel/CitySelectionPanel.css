@@ -1,0 +1,23 @@
+@tailwind components;
+
+@layer components {
+    .city-panel {
+        @apply w-80 p-4 overflow-y-auto shadow-lg flex-shrink-0;
+
+        .city-input {
+            @apply w-full mt-4;
+        }
+
+        .city-suggestion-button {
+            @apply w-full text-left;
+        }
+
+        .city-list {
+            @apply mt-6 space-y-2;
+
+            .city-button {
+                @apply w-full text-left;
+            }
+        }
+    }
+}

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { fetchCities, saveCity } from '../../services/Firestore';
 import { CityInput } from './CitySelectionInput';
 import { CityList } from './CitySelectionList';
+import './CitySelectionPanel.css';
 
 interface Props {
     onCitySelect: (city: string) => void;
@@ -21,8 +22,8 @@ export default function CitySelectionPanel({ onCitySelect, cities, setCities }: 
         })();
     }, [setCities]);
 
-    const handleSelect = async (description: string) => {
-        const cityName = parseCityName(description);
+    const handleSelect = async (cityList: string) => {
+        const cityName = parseCityName(cityList);
         if (cities.some(c => c.toLowerCase() === cityName.toLowerCase())) return;
 
         try {
@@ -33,14 +34,14 @@ export default function CitySelectionPanel({ onCitySelect, cities, setCities }: 
         }
     };
 
-    const parseCityName = (description: string) => {
-        const parts = description.split(',');
-        return parts.length > 0 ? parts[0].trim() : description;
+    const parseCityName = (cityList: string) => {
+        const parts = cityList.split(',');
+        return parts.length > 0 ? parts[0].trim() : cityList;
     };
 
     return (
-        <div className="w-80 bg-white p-4 overflow-y-auto shadow-lg flex-shrink-0">
-            <h1 className="text-xl font-bold mb-4">Add City</h1>
+        <div className="city-panel">
+            <h1>Add City</h1>
             <CityInput onSelect={handleSelect} />
             <CityList cities={cities} onCitySelect={onCitySelect} />
         </div>
